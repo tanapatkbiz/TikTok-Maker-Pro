@@ -1,33 +1,6 @@
-# TikTok Maker Pro
-
-This project creates a Windows desktop app that turns a YouTube video into short-form TikTok clips automatically.
-
-Features:
-- GUI in Thai
-- User enters YouTube URL manually
-- Download video using yt-dlp
-- Split into multi-clip segments
-- Add Thai subtitle support
-- Generate Thai voice-over via TTS
-- Auto-generate TikTok captions and hashtags
-- Build to Windows EXE using PyInstaller
-
-Python dependencies:
-- pyinstaller
-- yt-dlp
-- whisper
-- pyttsx3
-- requests
-
-Install:
-
-```bash
-pip install -r requirements.txt
-```
-
-Build exe:
-
-```bash
-python build_exe.py
-```
-
+pyinstaller>=6.0.0
+yt-dlp>=2023.11.16
+pyttsx3>=2.90
+requests>=2.31.0
+openai-whisper>=20231117
+pillow>=10.0.0

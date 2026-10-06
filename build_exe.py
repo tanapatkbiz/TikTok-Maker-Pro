@@ -1,4 +1,6 @@
-import json
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import os
 import shutil
 import subprocess
@@ -6,84 +8,125 @@ import sys
 from pathlib import Path
 
 
-def run(cmd):
-    subprocess.run(cmd, check=True)
+def build_exe_windows():
+    """
+    สร้าง EXE สำหรับ Windows โดยใช้ PyInstaller
+    """
+    print("🔨 กำลังสร้าง EXE สำหรับ Windows...")
+    print()
+    
+    # ตรวจสอบว่า PyInstaller ได้รับการติดตั้ง
+    try:
+        import PyInstaller
+    except ImportError:
+        print("📦 ติดตั้ง PyInstaller...")
+        subprocess.run([sys.executable, "-m", "pip", "install", "pyinstaller>=6.0.0"], check=True)
+    
+    # สร้าง spec file สำหรับ PyInstaller
+    spec_content = '''# -*- mode: python ; coding: utf-8 -*-
+import sys
+from PyInstaller.utils.hooks import collect_submodules, get_module_file_attribute
 
+block_cipher = None
 
-def load_config(path):
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+a = Analysis(
+    ['app.py'],
+    pathex=[],
+    binaries=[],
+    datas=[('scripts', 'scripts'), ('config', 'config')],
+    hiddenimports=[
+        'tkinter',
+        'yt_dlp',
+        'whisper',
+        'pyttsx3',
+        'PIL',
+        'requests',
+    ],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludedimports=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
+    noarchive=False,
+)
 
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-def ensure_tools():
-    for tool in ["yt-dlp", "ffmpeg"]:
-        if tool == "ffmpeg":
-            try:
-                subprocess.run(["ffmpeg", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-            except Exception:
-                raise RuntimeError("FFmpeg ไม่พบใน PATH กรุณาติดตั้ง FFmpeg ก่อนใช้งาน")
-        else:
-            try:
-                __import__("yt_dlp")
-            except Exception:
-                raise RuntimeError("yt-dlp ยังไม่ได้ติดตั้ง กรุณาติดตั้ง dependency ก่อนใช้งาน")
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    [],
+    name='TikTokMakerPro',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=False,
+    disable_windowed_traceback=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+)
 
-
-def download_video(url, output_dir):
-    os.makedirs(output_dir, exist_ok=True)
-    video_path = os.path.join(output_dir, "input.mp4")
-    if os.path.exists(video_path):
-        os.remove(video_path)
-    run(["yt-dlp", "-f", "best[ext=mp4]/best", "-o", video_path, url])
-    return video_path
-
-
-def split_video(input_file, output_dir, clip_duration):
-    script_path = os.path.join("scripts", "split_video.py")
-    run([sys.executable, script_path, input_file, output_dir, str(clip_duration)])
-
-
-def add_subtitles(output_dir):
-    script_path = os.path.join("scripts", "add_subtitles.py")
-    run([sys.executable, script_path, output_dir])
-
-
-def generate_tts(output_dir):
-    script_path = os.path.join("scripts", "generate_tts.py")
-    run([sys.executable, script_path, output_dir])
-
-
-def generate_captions(output_dir):
-    script_path = os.path.join("scripts", "generate_captions.py")
-    run([sys.executable, script_path, output_dir])
-
-
-def main():
-    config_path = sys.argv[1]
-    config = load_config(config_path)
-    output_folder = config.get("output_folder", "output")
-    clip_duration = int(config.get("clip_duration", 30))
-
-    print("[1/5] ตรวจสอบเครื่องมือ")
-    ensure_tools()
-
-    print("[2/5] ดาวน์โหลดวิดีโอจาก YouTube")
-    input_file = download_video(config["youtube_url"], output_folder)
-
-    print("[3/5] ตัดคลิปออกเป็นวิดีโอสั้น")
-    split_video(input_file, output_folder, clip_duration)
-
-    if config.get("option_subtitle"):
-        print("[4/5] เพิ่มซับไทย")
-        add_subtitles(output_folder)
-
-    if config.get("option_tts"):
-        print("[5/5] สร้าง Thai TTS และ Caption")
-        generate_tts(output_folder)
-        generate_captions(output_folder)
-
-    print("เสร็จสิ้น")
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='TikTokMakerPro'
+)
+'''
+    
+    spec_file = "TikTokMakerPro.spec"
+    with open(spec_file, "w", encoding="utf-8") as f:
+        f.write(spec_content)
+    
+    print(f"✅ สร้าง spec file: {spec_file}")
+    print()
+    
+    # รัน PyInstaller
+    print("⏳ กำลังสร้าง EXE (อาจใช้เวลาสักครู่)...")
+    print()
+    
+    result = subprocess.run(
+        [sys.executable, "-m", "PyInstaller", "--clean", spec_file],
+        capture_output=False,
+        text=True
+    )
+    
+    if result.returncode == 0:
+        exe_path = os.path.join("dist", "TikTokMakerPro", "TikTokMakerPro.exe")
+        print()
+        print("="*60)
+        print("✅ สร้าง EXE เสร็จสิ้นแล้ว!")
+        print("="*60)
+        print()
+        print(f"📍 ตำแหน่ง: {os.path.abspath(exe_path)}")
+        print()
+        print("วิธีใช้งาน:")
+        print("1. ไปที่โฟลเดอร์ dist/TikTokMakerPro/")
+        print("2. คลิก TikTokMakerPro.exe")
+        print("3. โปรแกรมจะติดตั้ง dependencies ต่าง ๆ โดยอัตโนมัติ (ครั้งแรก)")
+        print("4. ใส่ YouTube URL และเลือกตัวเลือกที่ต้องการ")
+        print("5. คลิก 'เริ่มประมวลผล'")
+        print()
+        return True
+    else:
+        print()
+        print("❌ ไม่สามารถสร้าง EXE ได้")
+        return False
 
 
 if __name__ == "__main__":
-    main()
+    success = build_exe_windows()
+    sys.exit(0 if success else 1)
