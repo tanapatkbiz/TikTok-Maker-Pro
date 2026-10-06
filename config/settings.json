@@ -1,0 +1,22 @@
+import os
+import subprocess
+import sys
+
+
+def build_exe():
+    cmd = [
+        sys.executable,
+        "-m",
+        "PyInstaller",
+        "--onefile",
+        "--windowed",
+        "--name",
+        "TikTokMakerPro",
+        "app.py",
+    ]
+    subprocess.run(cmd, check=True)
+    print("EXE ถูกสร้างขึ้นแล้วที่ dist/TikTokMakerPro.exe")
+
+
+if __name__ == "__main__":
+    build_exe()

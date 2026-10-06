@@ -1,0 +1,21 @@
+# Ignore Python cache and build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Local output folders
+output/
+logs/
+
+# VS Code
+.vscode/
+
+# Environment files
+.env
+.env.*
